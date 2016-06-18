@@ -30,24 +30,24 @@ public class Logger {
      */
     public final static String PATTERN = "(\\d+\\/\\d+\\/\\d+\\s+\\d+:\\d+\\s+[A|P]M)\\s+([A-Z|])\\/(((?!:).)*):(.*)";
     private final File mLogFile;
-    private final Level mMinLoggingLevel;
+    private final LogLevel mMinLoggingLevel;
     private final long mMaxLogFileSize;
     private static Logger sInstance;
     private static final long DEFAULT_MAX_LOG_FILE_SIZE = 1024 * 200;
     private File stacktraceDir = null;
 
     static {
-        sInstance = new Logger(null, Level.Info);
+        sInstance = new Logger(null, LogLevel.Info);
     }
 
     /**
      * @param logFile
      * @param minLogingLevel
      */
-    private Logger(File logFile, Level minLogingLevel) {
+    private Logger(File logFile, LogLevel minLogingLevel) {
         mLogFile = logFile;
         if (minLogingLevel == null) {
-            mMinLoggingLevel = Level.Info;
+            mMinLoggingLevel = LogLevel.Info;
         } else {
             mMinLoggingLevel = minLogingLevel;
         }
@@ -59,10 +59,10 @@ public class Logger {
      * @param minLogingLevel
      * @param maxLogFileSize
      */
-    private Logger(File logFile, Level minLogingLevel, long maxLogFileSize) {
+    private Logger(File logFile, LogLevel minLogingLevel, long maxLogFileSize) {
         mLogFile = logFile;
         if (minLogingLevel == null) {
-            mMinLoggingLevel = Level.Info;
+            mMinLoggingLevel = LogLevel.Info;
         } else {
             mMinLoggingLevel = minLogingLevel;
         }
@@ -84,11 +84,11 @@ public class Logger {
      * Returns an array of stacktrace files found in the directory
      * @return
      */
-    public static String[] listStacktraces() {
+    public static File[] listStacktraces() {
         if(sInstance.stacktraceDir != null) {
             return GlobalExceptionHandler.getStacktraces(sInstance.stacktraceDir);
         } else {
-            return new String[]{};
+            return new File[0];
         }
     }
 
@@ -98,7 +98,7 @@ public class Logger {
      * @param logFile        the file where logs will be written
      * @param minLogingLevel the minimum level a log must be before it is recorded to the log file
      */
-    public static void configure(File logFile, Level minLogingLevel) {
+    public static void configure(File logFile, LogLevel minLogingLevel) {
         sInstance = new Logger(logFile, minLogingLevel);
     }
 
@@ -109,60 +109,8 @@ public class Logger {
      * @param minLogingLevel the minimum level a log must be before it is recorded to the log file
      * @param maxLogFileSize the maximum size the log file may become before old logs are truncated
      */
-    public static void configure(File logFile, Level minLogingLevel, long maxLogFileSize) {
+    public static void configure(File logFile, LogLevel minLogingLevel, long maxLogFileSize) {
         sInstance = new Logger(logFile, minLogingLevel, maxLogFileSize);
-    }
-
-    public enum Level {
-        Info(0, "I"),
-        Warning(1, "W"),
-        Error(2, "E");
-
-        Level(int i, String label) {
-            this.level = i;
-            this.label = label;
-        }
-
-        private int level;
-        private String label;
-
-        public int getIndex() {
-            return level;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        /**
-         * Returns a level by it's label
-         *
-         * @param label the case insensitive label of the level
-         * @return null if the level does not exist
-         */
-        public static Level getLevel(String label) {
-            for (Level l : Level.values()) {
-                if (l.getLabel().toLowerCase().equals(label.toLowerCase())) {
-                    return l;
-                }
-            }
-            return null;
-        }
-
-        /**
-         * Returns a level by it's index
-         *
-         * @param index the level index
-         * @return null if the level does not exist
-         */
-        public static Level getLevel(int index) {
-            for (Level l : Level.values()) {
-                if (l.getIndex() == index) {
-                    return l;
-                }
-            }
-            return null;
-        }
     }
 
     /**
@@ -176,7 +124,7 @@ public class Logger {
         try {
             int logResult = Log.e(logMessageTag, logMessage);
             if (logResult > 0) {
-                sInstance.logToFile(Level.Error, logMessageTag, logMessage);
+                sInstance.logToFile(LogLevel.Error, logMessageTag, logMessage);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -194,7 +142,7 @@ public class Logger {
         try {
             int logResult = Log.w(logMessageTag, logMessage);
             if (logResult > 0) {
-                sInstance.logToFile(Level.Warning, logMessageTag, logMessage);
+                sInstance.logToFile(LogLevel.Warning, logMessageTag, logMessage);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -212,7 +160,7 @@ public class Logger {
         try {
             int logResult = Log.i(logMessageTag, logMessage);
             if (logResult > 0) {
-                sInstance.logToFile(Level.Info, logMessageTag, logMessage);
+                sInstance.logToFile(LogLevel.Info, logMessageTag, logMessage);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -231,7 +179,7 @@ public class Logger {
         try {
             int logResult = Log.e(logMessageTag, logMessage, throwableException);
             if (logResult > 0) {
-                sInstance.logToFile(Level.Error, logMessageTag, logMessage + "\r\n" + Log.getStackTraceString(throwableException));
+                sInstance.logToFile(LogLevel.Error, logMessageTag, logMessage + "\r\n" + Log.getStackTraceString(throwableException));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -250,7 +198,7 @@ public class Logger {
         try {
             int logResult = Log.w(logMessageTag, logMessage, throwableException);
             if (logResult > 0) {
-                sInstance.logToFile(Level.Warning, logMessageTag, logMessage + "\r\n" + Log.getStackTraceString(throwableException));
+                sInstance.logToFile(LogLevel.Warning, logMessageTag, logMessage + "\r\n" + Log.getStackTraceString(throwableException));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -282,9 +230,9 @@ public class Logger {
      * Writes a message to the log file on the device.
      *
      * @param logMessageTag A tag identifying a group of log messages.
-     * @param logMessage    The message to add to the log.
+     * @param logMessage The message to add to the log.
      */
-    private void logToFile(Level level, String logMessageTag, String logMessage) {
+    private void logToFile(LogLevel level, String logMessageTag, String logMessage) {
         // filter out logging levels
         if (level.getIndex() >= mMinLoggingLevel.getIndex() && mLogFile != null) {
             try {
@@ -312,6 +260,10 @@ public class Logger {
         }
     }
 
+    /**
+     * Returns the path to the current log file
+     * @return
+     */
     public static File getLogFile() {
         return sInstance.mLogFile;
     }
@@ -320,15 +272,15 @@ public class Logger {
      * Returns a list of log entries
      * @return
      */
-    public static List<Entry> getLogEntries() {
-        List<Entry> logs = new ArrayList<>();
+    public static List<LogEntry> getLogEntries() {
+        List<LogEntry> logs = new ArrayList<>();
         if (sInstance.mLogFile != null) {
             try {
                 BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(sInstance.mLogFile)));
                 StringBuilder sb = new StringBuilder();
                 String line;
                 Pattern pattern = Pattern.compile(Logger.PATTERN);
-                Entry log = null;
+                LogEntry log = null;
                 while ((line = br.readLine()) != null) {
                     if (Thread.interrupted()) break;
                     Matcher match = pattern.matcher(line);
@@ -341,7 +293,7 @@ public class Logger {
                         }
                         // start new log
                         SimpleDateFormat format = new SimpleDateFormat("MM/dd/yy hh:mm a");
-                        log = new Entry(format.parse(match.group(1)), Level.getLevel(match.group(2)), match.group(3), match.group(5));
+                        log = new LogEntry(format.parse(match.group(1)), LogLevel.getLevel(match.group(2)), match.group(3), match.group(5));
                     } else {
                         // build log details
                         sb.append(line);
@@ -360,63 +312,5 @@ public class Logger {
             Log.w(Logger.class.getName(), "The log file has not been configured and cannot be read");
         }
         return logs;
-    }
-
-    public static class Entry {
-        public final Date date;
-        public final Level level;
-        public final String classPath;
-        public final String message;
-        private String mDetails;
-
-        /**
-         * Creates a new error object
-         *
-         * @param date
-         * @param level
-         * @param classPath
-         * @param message
-         */
-        public Entry(Date date, Level level, String classPath, String message) {
-            this.date = date;
-            this.level = level;
-            this.classPath = classPath;
-            this.message = message;
-        }
-
-        /**
-         * Creates a new error object
-         *
-         * @param date
-         * @param level
-         * @param classPath
-         * @param message
-         * @param details
-         */
-        public Entry(Date date, Level level, String classPath, String message, String details) {
-            this.date = date;
-            this.level = level;
-            this.classPath = classPath;
-            this.message = message;
-            mDetails = details;
-        }
-
-        /**
-         * Sets the error log details
-         *
-         * @param details
-         */
-        public void setDetails(String details) {
-            mDetails = details;
-        }
-
-        /**
-         * Returns the error log details
-         *
-         * @return
-         */
-        public String getDetails() {
-            return mDetails;
-        }
     }
 }

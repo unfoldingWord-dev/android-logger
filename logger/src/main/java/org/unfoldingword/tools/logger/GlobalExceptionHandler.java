@@ -8,13 +8,14 @@ import java.io.FilenameFilter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.List;
 
 /**
  * This class writes exceptions to a file on disk before killing the app
  * This allows you to retrieve them later for debugging.
  * http://stackoverflow.com/questions/601503/how-do-i-obtain-crash-data-from-my-android-application
  */
-public class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
+class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
     private static final String STACKTRACE_EXT = "stacktrace";
     private Thread.UncaughtExceptionHandler defaultUEH;
     private final String mStracktraceDir;
@@ -37,8 +38,8 @@ public class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
      * @param stacktraceDir
      * @return
      */
-    public static String[] getStacktraces(File stacktraceDir) {
-        String[] files = stacktraceDir.list(new FilenameFilter() {
+    public static File[] getStacktraces(File stacktraceDir) {
+        File[] files = stacktraceDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String filename) {
                 String pieces[] = filename.split("\\.");
@@ -47,14 +48,9 @@ public class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
             }
         });
         if(files != null) {
-            // build full path
-            String[] stacktraces = new String[files.length];
-            for (int i = 0; i < files.length; i++) {
-                stacktraces[i] = new File(stacktraceDir, files[i]).getAbsolutePath();
-            }
-            return stacktraces;
+            return files;
         } else {
-            return new String[0];
+            return new File[0];
         }
     }
 
