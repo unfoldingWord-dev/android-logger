@@ -1,4 +1,4 @@
-package org.unfoldingword.logger;
+package org.unfoldingword.tools.logger;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;

@@ -1,4 +1,4 @@
-package org.unfoldingword.logger;
+package org.unfoldingword.tools.logger;
 import android.os.Process;
 
 import java.io.BufferedWriter;

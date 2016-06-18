@@ -1,4 +1,4 @@
-package org.unfoldingword.logger;
+package org.unfoldingword.tools.logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,13 +14,13 @@ import java.nio.charset.Charset;
 /**
  * Created by joel on 2/26/2016.
  */
-public class FileUtils {
+class FileUtils {
 
 
     public static String convertStreamToString(InputStream is) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
-        String line = null;
+        String line;
         while ((line = reader.readLine()) != null) {
             sb.append(line).append("\n");
         }
