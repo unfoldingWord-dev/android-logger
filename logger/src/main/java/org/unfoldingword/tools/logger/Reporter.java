@@ -8,6 +8,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -79,8 +80,12 @@ public abstract class Reporter {
     public String submit(String data) {
         try {
             URL url = new URL(this.url);
-            // TODO: 2/26/2016 provide support for http or https
-            HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
+            HttpURLConnection conn;
+            if(url.getProtocol() == "https") {
+                conn = (HttpsURLConnection)url.openConnection();
+            } else {
+                conn = (HttpURLConnection)url.openConnection();
+            }
             String auth = getAuth();
             if(auth != null) {
                 conn.setRequestProperty("Authorization", auth);
