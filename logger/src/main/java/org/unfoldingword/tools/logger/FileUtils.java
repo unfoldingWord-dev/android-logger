@@ -40,4 +40,17 @@ class FileUtils {
         outputStreamWriter.write(content);
         outputStreamWriter.close();
     }
+
+    /**
+     * Recursively deletes a directory or a file
+     * @param fileOrDirectory
+     */
+    public static void deleteRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            for (File child : fileOrDirectory.listFiles()) {
+                deleteRecursive(child);
+            }
+        }
+        fileOrDirectory.delete();
+    }
 }

@@ -81,6 +81,14 @@ public class Logger {
     }
 
     /**
+     * Returns the stracktrace directory
+     * @return
+     */
+    public static File getStacktraceDir() {
+        return sInstance.stacktraceDir;
+    }
+
+    /**
      * Returns an array of stacktrace files found in the directory
      * @return
      */
@@ -211,8 +219,9 @@ public class Logger {
     public static void flush() {
         if (sInstance.mLogFile != null) {
             sInstance.mLogFile.delete();
-        } else {
-            Log.w(Logger.class.getName(), "The log file has not been configured and cannot be deleted");
+        }
+        if(sInstance.stacktraceDir != null) {
+            FileUtils.deleteRecursive(sInstance.stacktraceDir);
         }
     }
 
