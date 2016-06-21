@@ -214,7 +214,7 @@ public class Logger {
     }
 
     /**
-     * Empties the log file
+     * Empties the log file and deletes stack traces
      */
     public static void flush() {
         if (sInstance.mLogFile != null) {
