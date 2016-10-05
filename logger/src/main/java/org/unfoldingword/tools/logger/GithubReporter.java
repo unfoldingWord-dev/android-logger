@@ -9,19 +9,25 @@ import android.provider.Settings;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.unfoldingword.tools.http.PostRequest;
+import org.unfoldingword.tools.http.Request;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * This class submits information to a github repository
  */
-public class GithubReporter extends Reporter {
+public class GithubReporter {
 
     private static final int MAX_TITLE_LENGTH = 50;
     private static final String DEFAULT_CRASH_TITLE = "crash report";
     private static final String DEFAULT_BUG_TITLE = "bug report";
     private final Context context;
+    private final String repositoryUrl;
+    private final String githubOauth2Token;
 
     /**
      * Generates a new github reporter
@@ -31,23 +37,34 @@ public class GithubReporter extends Reporter {
      * @param githubOauth2Token
      */
     public GithubReporter(Context context, String repositoryUrl, String githubOauth2Token) {
-        super(repositoryUrl);
-        setAuthorization(githubOauth2Token);
+        this.repositoryUrl = repositoryUrl;
+        this.githubOauth2Token = githubOauth2Token;
         this.context = context;
+    }
+
+    /**
+     * Submit the data
+     * @param data
+     * @return
+     * @throws IOException
+     */
+    private Request submit(String data) throws IOException {
+        PostRequest request = new PostRequest(new URL(repositoryUrl), data);
+        request.setAuthentication(githubOauth2Token);
+        request.setContentType("application/json");
+        request.read();
+        return request;
     }
 
     /**
      * Creates a crash issue on github.
      * @param notes notes supplied by the user
      * @param stacktraceFile the stacktrace file
+     * @return the request object
      */
-    public void reportCrash(String notes, File stacktraceFile) {
-        try {
-            String stacktrace = FileUtils.readFileToString(stacktraceFile);
-            reportCrash(notes, stacktrace, null);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public Request reportCrash(String notes, File stacktraceFile) throws IOException {
+        String stacktrace = FileUtils.readFileToString(stacktraceFile);
+        return reportCrash(notes, stacktrace, null);
     }
 
     /**
@@ -55,8 +72,9 @@ public class GithubReporter extends Reporter {
      * @param notes notes supplied by the user
      * @param stacktraceFile the stacktrace file
      * @param logFile the log file
+     * @return the request object
      */
-    public void reportCrash(String notes, File stacktraceFile, File logFile) {
+    public Request reportCrash(String notes, File stacktraceFile, File logFile) throws IOException {
         String log = null;
         if(logFile.exists()) {
             try {
@@ -65,12 +83,9 @@ public class GithubReporter extends Reporter {
                 e.printStackTrace();
             }
         }
-        try {
-            String stacktrace = FileUtils.readFileToString(stacktraceFile);
-            reportCrash(notes, stacktrace, log);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        String stacktrace = FileUtils.readFileToString(stacktraceFile);
+        return reportCrash(notes, stacktrace, log);
     }
 
     /**
@@ -78,8 +93,9 @@ public class GithubReporter extends Reporter {
      * @param notes notes supplied by the user
      * @param stacktrace the stracktrace
      * @param log information from the log
+     * @return the request object
      */
-    public void reportCrash(String notes, String stacktrace, String log) {
+    public Request reportCrash(String notes, String stacktrace, String log) throws IOException {
         String title = getTitle(notes, DEFAULT_CRASH_TITLE);
         StringBuffer bodyBuf = new StringBuffer();
         bodyBuf.append(getNotesBlock(notes));
@@ -88,24 +104,25 @@ public class GithubReporter extends Reporter {
         bodyBuf.append(getLogBlock(log));
 
         String[] labels = new String[]{"crash report"};
-        String respose = submit(generatePayload(title, bodyBuf.toString(), labels));
-        // TODO: handle response
+        return submit(generatePayload(title, bodyBuf.toString(), labels));
     }
 
     /**
      * Creates a bug issue on github
      * @param notes notes supplied by the user
+     * @return the request object
      */
-    public void reportBug(String notes) {
-        reportBug(notes, "");
+    public Request reportBug(String notes) throws IOException {
+        return reportBug(notes, "");
     }
 
     /**
      * Creates a bug issue on github
      * @param notes notes supplied by the user
      * @param logFile the log file
+     * @return the request object
      */
-    public void reportBug(String notes, File logFile) {
+    public Request reportBug(String notes, File logFile) throws IOException {
         String log = null;
         if(logFile != null && logFile.exists()) {
             try {
@@ -114,15 +131,16 @@ public class GithubReporter extends Reporter {
                 e.printStackTrace();
             }
         }
-        reportBug(notes, log);
+        return reportBug(notes, log);
     }
 
     /**
      * Creates a bug issue on github
      * @param notes notes supplied by the user
      * @param log information from the log
+     * @return the request object
      */
-    public void reportBug(String notes, String log) {
+    public Request reportBug(String notes, String log) throws IOException {
         String title = getTitle(notes, DEFAULT_BUG_TITLE);
         StringBuffer bodyBuf = new StringBuffer();
         bodyBuf.append(getNotesBlock(notes));
@@ -130,8 +148,7 @@ public class GithubReporter extends Reporter {
         bodyBuf.append(getLogBlock(log));
 
         String[] labels = new String[]{"bug report"};
-        String respose = submit(generatePayload(title, bodyBuf.toString(), labels));
-        // TODO: handle response
+        return submit(generatePayload(title, bodyBuf.toString(), labels));
     }
 
     /**
