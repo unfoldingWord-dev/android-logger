@@ -70,13 +70,26 @@ public class Logger {
     }
 
     /**
-     * Registers the global exception handler
+     * Registers the global exception handler.
+     * The main process will be killed automatically when an exception occurs.
+     *
      * @param stacktraceDir the directory where stacktraces will be stored
      */
     public static void registerGlobalExceptionHandler(File stacktraceDir) {
+        registerGlobalExceptionHandler(stacktraceDir, true);
+    }
+
+    /**
+     * Registers the global exception handler
+     * @param stacktraceDir the directory where stacktraces will be stored
+     * @param autoKill kills the main process automatically when an exception occurs
+     */
+    public static void registerGlobalExceptionHandler(File stacktraceDir, boolean autoKill) {
         if(!(Thread.getDefaultUncaughtExceptionHandler() instanceof GlobalExceptionHandler)) {
             sInstance.stacktraceDir = stacktraceDir;
-            Thread.setDefaultUncaughtExceptionHandler(new GlobalExceptionHandler(stacktraceDir));
+            GlobalExceptionHandler geh = new GlobalExceptionHandler(stacktraceDir);
+            geh.setKillOnException(autoKill);
+            Thread.setDefaultUncaughtExceptionHandler(geh);
         }
     }
 
