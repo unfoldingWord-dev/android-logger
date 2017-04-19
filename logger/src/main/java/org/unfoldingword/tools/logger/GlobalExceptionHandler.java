@@ -19,6 +19,7 @@ class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
     private static final String STACKTRACE_EXT = "stacktrace";
     private Thread.UncaughtExceptionHandler defaultUEH;
     private final String mStracktraceDir;
+    private boolean killOnException = true;
 
     /**
      * if any of the parameters is null, the respective functionality
@@ -31,6 +32,15 @@ class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
         }
         this.mStracktraceDir = stacktraceDir.getAbsolutePath();
         this.defaultUEH = Thread.getDefaultUncaughtExceptionHandler();
+    }
+
+    /**
+     * Sets whether this class should kill the main process to shut down the app if
+     * an exception occurs.
+     * @param kill
+     */
+    public void setKillOnException(boolean kill) {
+        this.killOnException = kill;
     }
 
     /**
@@ -75,9 +85,11 @@ class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
 
         defaultUEH.uncaughtException(t, e);
 
-        // force shut down so we don't end up with un-initialized objects
-        Process.killProcess(Process.myPid());
-        System.exit(0);
+        if(killOnException) {
+            // force shut down so we don't end up with un-initialized objects
+            Process.killProcess(Process.myPid());
+            System.exit(0);
+        }
     }
 
     /**
