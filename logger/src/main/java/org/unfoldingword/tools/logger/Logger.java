@@ -94,6 +94,14 @@ public class Logger {
     }
 
     /**
+     * Removes the exception handler.
+     */
+    public static void unRegisterGlobalExceptionHandler() {
+        sInstance.stacktraceDir = null;
+        Thread.setDefaultUncaughtExceptionHandler(null);
+    }
+
+    /**
      * Returns the stracktrace directory
      * @return
      */
